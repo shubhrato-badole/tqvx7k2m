@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "";
 
 const DAYS = Array.from({ length: 31 }, (_, i) => `2026-01-${String(i + 1).padStart(2, "0")}`);
 const DEADLINES = [["09:20", "EPEX hourly"], ["09:50", "N2EX hourly"], ["15:30", "EPEX half-hourly"]];
@@ -8,20 +10,36 @@ const short = d => fmt(d, 0, { weekday: "short", day: "numeric", month: "short" 
 const n0 = v => Math.round(v).toLocaleString("en-GB");
 const shift = (d, k) => new Date(Date.parse(d) + k * 864e5).toISOString().slice(0, 10);
 const gwh = (a, h) => (a.reduce((s, v) => s + v, 0) * h) / 1000; 
+const [b, bErr, bBusy] = useApi(`/api/briefing?day=${day}&cut=${cut}`);
+const [s, sErr, sBusy] = useApi(`/api/accuracy?cut=${cut}`);
+
+
 
 function useApi(url) {
-  const [data, setData] = useState(null); 
+  const [data, setData] = useState(null);
   const [err, setErr] = useState(false);
   const [busy, setBusy] = useState(true);
+
   useEffect(() => {
     let live = true;
-    setBusy(true); setErr(false);
-    fetch(url).then(r => (r.ok ? r.json() : Promise.reject())).then(d => live && setData(d))
-      .catch(() => live && setErr(true)).finally(() => live && setBusy(false));
-    return () => { live = false; };
+
+    setBusy(true);
+    setErr(false);
+
+   fetch(`${API_BASE_URL}${url}`)
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(d => live && setData(d))
+      .catch(() => live && setErr(true))
+      .finally(() => live && setBusy(false));
+
+    return () => {
+      live = false;
+    };
   }, [url]);
+
   return [data, err, busy];
 }
+
 
 function Chart({ rows, vint, reveal }) {
   const [h, setH] = useState(null);
