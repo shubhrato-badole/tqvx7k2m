@@ -18,7 +18,7 @@ def chunks(a, b, n=4):
         yield a, min(a + timedelta(n), b)
         a += timedelta(n)
 
-ts = lambda s: pd.to_datetime(s, utc=True).dt.tz_localize(None)  # Jan: UK time == UTC
+ts = lambda s: pd.to_datetime(s, utc=True).dt.tz_localize(None)  
 act, fc = [], []
 for a, b in chunks(date(2026, 1, 1), date(2026, 2, 2)):
     print("actuals", a, b)
@@ -35,7 +35,7 @@ A[["startTime", "generation"]].drop_duplicates("startTime").to_csv(f"{OUT}/actua
 F = pd.DataFrame(fc)[["publishTime", "startTime", "generation"]].copy()
 F["publishTime"], F["startTime"] = ts(F.publishTime), ts(F.startTime)
 day = F.startTime.dt.floor("D")
-# keep only forecasts that could inform a day-ahead decision (published up to 16:00 the day before)
+
 F = F[(F.startTime >= "2026-01-02") & (F.startTime < "2026-02-02")
       & (F.publishTime >= day - pd.Timedelta(days=2)) & (F.publishTime <= day - pd.Timedelta(hours=8))]
 F.drop_duplicates().to_csv(f"{OUT}/windfor.csv.gz", index=False)

@@ -7,10 +7,10 @@ const long = (d, add = 0) => fmt(d, add, { weekday: "long", day: "numeric", mont
 const short = d => fmt(d, 0, { weekday: "short", day: "numeric", month: "short" });
 const n0 = v => Math.round(v).toLocaleString("en-GB");
 const shift = (d, k) => new Date(Date.parse(d) + k * 864e5).toISOString().slice(0, 10);
-const gwh = (a, h) => (a.reduce((s, v) => s + v, 0) * h) / 1000; // MW x hours -> GWh
+const gwh = (a, h) => (a.reduce((s, v) => s + v, 0) * h) / 1000; 
 
 function useApi(url) {
-  const [data, setData] = useState(null); // keeps the previous result while the next one loads, so nothing flashes
+  const [data, setData] = useState(null); 
   const [err, setErr] = useState(false);
   const [busy, setBusy] = useState(true);
   useEffect(() => {
