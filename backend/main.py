@@ -3,14 +3,37 @@ import numpy as np, pandas as pd
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from logic import latest_before_deadline, offset
+from fastapi.middleware.cors import CORSMiddleware
 
-HERE = os.path.dirname(__file__)
-assert os.path.exists(f"{HERE}/data/windfor.csv.gz"), "Run `python fetch_data.py` first"
+app = FastAPI(title="Beaufort")
+
+FRONTEND_URL = os.getenv("FRONTEND_URL", "").rstrip("/")
+
+if FRONTEND_URL:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[FRONTEND_URL],
+        allow_credentials=False,
+        allow_methods=["GET"],
+        allow_headers=["*"],
+    )
+
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+assert os.path.exists(
+    f"{HERE}/data/windfor.csv.gz"
+), "Run `python fetch_data.py` first"
+
+assert os.path.exists(
+    f"{HERE}/data/actuals.csv.gz"
+), "Run `python fetch_data.py` first"
+
 act = (pd.read_csv(f"{HERE}/data/actuals.csv.gz", parse_dates=["startTime"]).drop_duplicates("startTime")
        .set_index("startTime").generation.resample("1h").mean().dropna().rename("actual"))
 fc = pd.read_csv(f"{HERE}/data/windfor.csv.gz", parse_dates=["publishTime", "startTime"])
 DEADLINES = {"09:20", "09:50", "15:30"}  
-app = FastAPI(title="Beaufort")
+
 
 @functools.lru_cache
 def table(cut):
